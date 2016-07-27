@@ -4,10 +4,15 @@
 #include "i2c_dealer.h"
 #include "PID_v1.h"
 #include "power.h"
+#include "PID_dealer.h"
 
 i2c i2c;
 Power power(2,3,4,6);
 MS5837 depth_Sensor;
+pid_dealer yaw_pid;
+pid_dealer pitch_pid;
+pid_dealer roll_pid;
+pid_dealer depth_pid;
 
 //variables for the i2c exchange
 int reference [4] = {0,0,0,0};
@@ -29,14 +34,14 @@ double throttle;
 double m1, m2, m3, m4, m5, m6;
 
 // PID Values for YPRD
-double yaw_kp = 0.5, yaw_ki = 0.5, yaw_kd = 0.5;
+double yaw_kp = 0.0, yaw_ki = 0.0, yaw_kd = 0.0;
 
 //PID for Pitch and Roll
-double pitch_kp = 0.5, pitch_ki = 0.5, pitch_kd = 0.5;
-double roll_kp = 0.5, roll_ki = 0.5, roll_kd = 0.5;
+double pitch_kp = 0.0, pitch_ki = 0.0, pitch_kd = 0.0;
+double roll_kp = 0.0, roll_ki = 0.0, roll_kd = 0.0;
 
 //PID for depth
-double depth_kp = 0.5, depth_ki = 0.5 , depth_kd = 0.5;
+double depth_kp = 0.0, depth_ki = 0.0 , depth_kd = 0.0;
 
 //double for the max output
 double outMIN, outMAX;
@@ -105,42 +110,55 @@ void setup() {
 //////////////////////////////////////////////////Main Loop////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop(){
+
+  if(!power.return_killswitch()){
+    //get reference for YPR
+    yaw_in = i2c.get_y();  
+    pitch_in = i2c.get_p();
+    roll_in = i2c.get_r();
+
+    //get reference for depth
+    depth_Sensor.read();
+    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
+
+    yaw.Compute();
+    pitch.Compute();
+    roll.Compute();
+    depth.Compute();
+
+    //calculate the final motor speeds
+    //left/right
+    m1 = (-YAW_CONST * (yaw_out/100.00 * 32000.00)) + (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + throttle;
+    m2 = (YAW_CONST * (yaw_out/100.00 * 32000.00)) + (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + throttle;
+
+    //dive motors
+    m3 = (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
+    m4 = (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (-ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
+    m5 = (-PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (-ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
+    m6 = (-PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
+
+    //do a final check to see if motor speeds are valid
+    m1 = clamper(m1);
+    m2 = clamper(m2);
+    m3 = clamper(m3);
+    m4 = clamper(m4);
+    m5 = clamper(m5);
+    m6 = clamper(m6);
   
-  //get reference for YPR
-  yaw_in = i2c.get_y();  
-  pitch_in = i2c.get_p();
-  roll_in = i2c.get_r();
-
-  //get reference for depth
-  depth_Sensor.read();
-  depth_in = depth_Sensor.depth() * (3.28084 / 1);//cionvert meters to feet
-
-  yaw.Compute();
-  pitch.Compute();
-  roll.Compute();
-  depth.Compute();
-
-  //calculate the final motor speeds
-  //left/right
-  m1 = (-YAW_CONST * (yaw_out/100.00 * 32000.00)) + (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + throttle;
-  m2 = (YAW_CONST * (yaw_out/100.00 * 32000.00)) + (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + throttle;
-
-  //dive motors
-  m3 = (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
-  m4 = (PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (-ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
-  m5 = (-PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (-ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
-  m6 = (-PITCH_CONST * (pitch_out/100.00 * 32000.00)) + (ROLL_CONST *(roll_out/100.00 * 32000.00)) + (DEPTH_CONST * (depth_out / 100.00 * 32000.00));
-
-  //do a final check to see if motor speeds are valid
-  //m1 = clamper(m1);
-  //m2 = clamper(m2);
-  //m3 = clamper(m3);
-  //m4 = clamper(m4);
-  //m5 = clamper(m5);
-  //m6 = clamper(m6);
-  
-  //monitor the killSwtich
-  power.monitor_killswitch();
+    //monitor the killSwtich
+    power.monitor_killswitch();
+  }
+  else{
+    m1 = 0;
+    m2 = 0;
+    m3 = 0;
+    m4 = 0;
+    m5 = 0;
+    m6 = 0;
+    depth_in = 0;
+    //monitor the killSwtich
+    power.monitor_killswitch(); 
+  }
 
     
 }
@@ -258,6 +276,124 @@ void readROS(size_t byteC){
         }        
       break;
 
+      ///////////////////////////////////PID writes///////////////////////////////
+
+      
+      //yaw P
+      case 15:
+        yaw_pid.first_num(PROPORTIONAL, reference);
+
+      break;
+
+      case 16:
+        yaw_pid.second_num(PROPORTIONAL, reference);
+        yaw_kp = yaw_pid.get_p();
+      break;
+      //Pitch I
+      case 17:
+        yaw_pid.first_num(INTEGRAL, reference);
+
+      break;
+
+      case 18:
+        yaw_pid.second_num(INTEGRAL, reference);
+        yaw_ki = yaw_pid.get_i();
+      break;
+
+      //pitch D
+      case 19:
+        yaw_pid.first_num(DERIVATIVE, reference);
+      break;
+
+      case 20:
+        yaw_pid.second_num(DERIVATIVE, reference);
+        yaw_kd = yaw_pid.get_d();
+      break;
+      /////////////////////////////////////////////pitch
+      case 21:
+        pitch_pid.first_num(PROPORTIONAL, reference);
+      break;
+
+      case 22:
+        pitch_pid.second_num(PROPORTIONAL, reference);
+        pitch_kp = pitch_pid.get_p();
+      break;
+
+      case 23:
+         pitch_pid.first_num(INTEGRAL, reference);
+      break;
+
+      case 24:
+        pitch_pid.second_num(INTEGRAL, reference);
+        pitch_ki = pitch_pid.get_i();
+      break;
+
+      case 25:
+        pitch_pid.first_num(DERIVATIVE, reference);
+      break;
+
+      case 26:
+         pitch_pid.second_num(DERIVATIVE, reference);
+         pitch_pid.get_d();
+      break;
+      ///////////////////////////////////////////////roll
+      case 27:
+        roll_pid.first_num(PROPORTIONAL, reference);
+      break;
+
+      case 28:
+         roll_pid.second_num(PROPORTIONAL, reference);
+         roll_kp = roll_pid.get_p();
+      break;
+
+      case 29:
+        roll_pid.first_num(INTEGRAL, reference);
+      break;
+
+      case 30:
+        roll_pid.second_num(INTEGRAL, reference);
+        roll_ki = roll_pid.get_i();
+      break;
+
+      case 31:
+        roll_pid.first_num(DERIVATIVE, reference);
+      break;
+
+      case 32:
+       roll_pid.second_num(DERIVATIVE, reference);
+       roll_kd = roll_pid.get_d();
+      break;
+
+      case 33:
+        ////////////////////////////////////////////////depth
+        depth_pid.first_num(PROPORTIONAL, reference);
+      break;
+
+      case 34:
+        depth_pid.second_num(PROPORTIONAL, reference);
+        depth_kp = depth_pid.get_p();
+      break;
+      
+      case 35:
+        depth_pid.first_num(INTEGRAL, reference);
+      break;
+
+      case 36:
+        depth_pid.second_num(INTEGRAL, reference);
+        depth_ki = depth_pid.get_i();
+      break;
+      
+      case 37:
+        depth_pid.first_num(DERIVATIVE, reference);
+      break;
+      
+      case 38:
+        depth_pid.second_num(DERIVATIVE, reference);
+        depth_kd = depth_pid.get_d();
+      break;
+
+
+      
 
       ////////////////////////////Read Requests///////////////////////////  
       //motor1
