@@ -10,9 +10,14 @@ public:
 
 
 	void init_motors();
-	void set_speed(int _motor, int speed);
+	void set_speed(int _motor, int signal);
+	void stop_motors();
+	void okay_to_operate();
+
 	
 	Servo m0, m1, m2, m3, m4, m5, m6;
+private:
+	bool killed;
 	
 	
 };
