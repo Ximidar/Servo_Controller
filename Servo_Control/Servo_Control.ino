@@ -3,11 +3,11 @@
 #include "i2c_dealer.h"
 #include "power.h"
 #include "Servo_Scarborough.h"
-
-Servo_Scarborough servos(0,1,2,3,4,5);
+                        //_m0, _m1, _m2, _m3, _m4,  _m5
+Servo_Scarborough servos( 8    ,4,  5,   6,   7,   3);
 double depth_in = 0.00;
 int reference[3];
-Power power(2,3,4,6);
+Power power(2);
 MS5837 depth_Sensor;
 String sender = "";
 int reg = 0;
@@ -41,10 +41,12 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop(){
 
+   depth_Sensor.read();
+    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
+
   if(!power.return_killswitch()){
 
-    depth_Sensor.read();
-    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
+   
     servos.okay_to_operate();
     //monitor the killSwtich
     power.monitor_killswitch();

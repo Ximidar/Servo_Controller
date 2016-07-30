@@ -13,6 +13,7 @@ public:
 	void set_speed(int _motor, int signal);
 	void stop_motors();
 	void okay_to_operate();
+  int motors[6];
 
 	
 	Servo m0, m1, m2, m3, m4, m5, m6;
