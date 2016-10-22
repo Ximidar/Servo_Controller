@@ -8,6 +8,7 @@
     public:
 
       Power(int killSwitch_pin, int relay1_pin, int relay2_pin, int relay3_pin);
+      Power(int killSwitch_pin);
       bool return_killswitch();
       void set_killswitch(bool _killSwitch);
       void monitor_killswitch();
@@ -18,6 +19,7 @@
       int relay2;
       int relay3;
       bool killSwitch;
+      bool relays;
   };
 
   #endif

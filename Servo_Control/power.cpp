@@ -13,12 +13,20 @@ Power::Power(int killSwitch_pin, int relay1_pin, int relay2_pin, int relay3_pin)
   relay1 = relay1_pin;
   relay2 = relay2_pin;
   relay3 = relay3_pin;
+  relays = true;
   
   //set up pins to recieve input/output
   pinMode(killPin, INPUT);
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
   pinMode(relay3, OUTPUT);
+  
+}
+
+Power::Power(int killSwitch_pin){
+  killPin = killSwitch_pin;
+   pinMode(killPin, INPUT);
+   relays = false;
   
 }
 
@@ -41,17 +49,19 @@ bool Power::return_killswitch(){
 void Power::set_killswitch(bool _killSwitch){
   killSwitch = _killSwitch;
 
-  if(killSwitch == POWER_OFF){
-    //write to the pins that control power to turn off
-    digitalWrite(relay1, HIGH);
-    digitalWrite(relay2, HIGH);
-    digitalWrite(relay3, HIGH);
-  }
-  else if(killSwitch == POWER_ON){
-    //write to pins to turn power on
-     digitalWrite(relay1, HIGH);
-    digitalWrite(relay2, HIGH);
-    digitalWrite(relay3, HIGH);
+  if(relays){
+    if(killSwitch == POWER_OFF){
+      //write to the pins that control power to turn off
+      digitalWrite(relay1, HIGH);
+      digitalWrite(relay2, HIGH);
+      digitalWrite(relay3, HIGH);
+    }
+    else if(killSwitch == POWER_ON){
+      //write to pins to turn power on
+      digitalWrite(relay1, HIGH);
+      digitalWrite(relay2, HIGH);
+      digitalWrite(relay3, HIGH);
+    }
   }
 }
 
