@@ -5,6 +5,8 @@
 #include "Servo_Scarborough.h"
                         //_m0, _m1, _m2, _m3, _m4,  _m5
 Servo_Scarborough servos( 8    ,4,  5,   6,   7,   3);
+//we may want to change pins 5, 7, and 8 as they lie on the RX TX lines
+//At least pin 5 as it lies on the RX1 line which may be being used at startup.
 double depth_in = 0.00;
 int reference[3];
 Power power(2);
