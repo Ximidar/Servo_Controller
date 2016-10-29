@@ -16,7 +16,12 @@ int reg = 0;
 int led = 13;
 
 void setup() {
-  //Serial.begin(9600);
+
+  Serial1.end();
+  Serial2.end();
+  Serial3.end();
+  
+
   //set up i2c slave on teensy pins 18 and 19 
   Wire.begin(I2C_SLAVE, 0x04, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_100); //set up the teensy as a slave
   Wire.onReceive(readROS); //function for handling receiving instructions
@@ -44,7 +49,7 @@ void setup() {
 void loop(){
 
    depth_Sensor.read();
-    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
+   depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
 
   if(!power.return_killswitch()){
 

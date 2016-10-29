@@ -41,23 +41,23 @@ void Servo_Scarborough::stop_motors(){
   motors[4] = 1500;
   motors[5] = 1500;
   
-	m0.writeMicroseconds(motors[0]);
+  m0.writeMicroseconds(motors[0]);
   m1.writeMicroseconds(motors[1]);
   m2.writeMicroseconds(motors[2]);
   m3.writeMicroseconds(motors[3]);
   m4.writeMicroseconds(motors[4]);
   m5.writeMicroseconds(motors[5]);
-	killed = true;
+  killed = true;
 }
 
 void Servo_Scarborough::okay_to_operate(){
 	killed = false;
- m0.writeMicroseconds(motors[0]);
- m1.writeMicroseconds(motors[1]);
- m2.writeMicroseconds(motors[2]);
- m3.writeMicroseconds(motors[3]);
- m4.writeMicroseconds(motors[4]);
- m5.writeMicroseconds(motors[5]);
+    m0.writeMicroseconds(motors[0]);
+    m1.writeMicroseconds(motors[1]);
+    m2.writeMicroseconds(motors[2]);
+    m3.writeMicroseconds(motors[3]);
+    m4.writeMicroseconds(motors[4]);
+    m5.writeMicroseconds(motors[5]);
  
 }
 
@@ -66,12 +66,11 @@ void Servo_Scarborough::set_speed(int _motor, int signal){
 	if(!killed){
 		switch(_motor){
 			case 0:
-        motors[0] = signal;
-				
+                motors[0] = signal;
 			break;
 
 			case 1:
-			 motors[1] = signal;
+			     motors[1] = signal;
 			break;
 
 			case 2:
@@ -96,12 +95,7 @@ void Servo_Scarborough::set_speed(int _motor, int signal){
 		}
 	}
  else{
-  motors[0] = 1500;
-  motors[1] = 1500;
-  motors[2] = 1500;
-  motors[3] = 1500;
-  motors[4] = 1500;
-  motors[5] = 1500;
+    // do nothing
  }
 
 }
