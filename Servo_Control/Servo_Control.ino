@@ -9,7 +9,7 @@ Servo_Scarborough servos( 8    ,4,  5,   6,   7,   3);
 //At least pin 5 as it lies on the RX1 line which may be being used at startup.
 double depth_in = 0.00;
 int reference[3];
-Power power(2);
+Power power(2);//Killswitch is Digital Pin 2
 MS5837 depth_Sensor;
 String sender = "";
 int reg = 0;
