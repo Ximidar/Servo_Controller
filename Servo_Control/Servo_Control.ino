@@ -169,11 +169,11 @@ void writeROS(){
     else if(power.return_killswitch() == POWER_ON){
       kill = 1;
     }
-    sender = "K:" + String(kill,0) + ";";
+    sender = "K:" + String(kill) + ";";
     Wire.write(sender.c_str());
   }
   else if(reg == 8){
-    sender = "D:" + String(depth_in,2) + ";";
+    sender = "D:" + String(depth_in) + ";";
     Wire.write(sender.c_str());
   }
 
