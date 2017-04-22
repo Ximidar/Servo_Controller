@@ -50,6 +50,9 @@ void loop(){
 
    depth_Sensor.read();
    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
+//   if(depth_in > 1000.00){
+//    depth_in = 0.00;
+//   }
 
   if(!power.return_killswitch()){
 
@@ -92,44 +95,45 @@ void readROS(size_t byteC){
 
 
       ///////////////////////////////////motor Writes/////////////////////////////////
-     //first number for yaw
+      //first number for yaw
+      //low | (high<<8)
       case 0:       
-        servos.set_speed(0, (reference[1] * 256) + reference[2]);
+        servos.set_speed(0, reference[1] | (reference[2]<<8) );
         break;
         
      //second number for yaw
       case 1:        
-        servos.set_speed(1, (reference[1] * 256) + reference[2]);        
+        servos.set_speed(1, reference[1] | (reference[2]<<8) );        
         break;
         
       //first number for pitch
       case 2:        
-        servos.set_speed(2, (reference[1] * 256) + reference[2]);        
+        servos.set_speed(2, reference[1] | (reference[2]<<8) );        
         break;
         
       //second number for pitch
       case 3:        
-        servos.set_speed(3, (reference[1] * 256) + reference[2]);        
+        servos.set_speed(3, reference[1] | (reference[2]<<8) );        
         break;
         
       //first number for roll
       case 4:        
-        servos.set_speed(4, (reference[1] * 256) + reference[2]);        
+        servos.set_speed(4, reference[1] | (reference[2]<<8) );        
         break;
         
       //second number for roll
       case 5:        
-       servos.set_speed(5, (reference[1] * 256) + reference[2]);        
+       servos.set_speed(5, reference[1] | (reference[2]<<8) );        
         break;
 
       /////////////////////////////////POWER WRITES/////////////////////////////////
       //enable or disable power
       case 14:
         //if the reference == 0 disable power
-        if(  ((double)(reference[1] * 256) + reference[2]) == 0 ){
+        if(  (reference[1] | (reference[2]<<8) ) == 0 ){
           power.set_killswitch(POWER_OFF);
         }//otherwise if reference = 1 enable power
-        else if(  ((double)(reference[1] * 256) + reference[2]) == 1 ){
+        else if(  (reference[1] | (reference[2]<<8) ) == 1 ){
           power.set_killswitch(POWER_ON);
         }        
       break;      
@@ -157,7 +161,10 @@ void readROS(size_t byteC){
 //This function writes motor values to ROS with strings
 void writeROS(){
  
-  sender = "";
+  //initialize number to be sent.
+  byte package[2];
+  byte low = 0;
+  byte high = 0;
 
  
   //////////////////////////////////////Power Reads/////////////////////////////////////////////////
@@ -169,12 +176,25 @@ void writeROS(){
     else if(power.return_killswitch() == POWER_ON){
       kill = 1;
     }
-    sender = "K:" + String(kill) + ";";
-    Wire.write(sender.c_str());
+    //split the killswitch into low/high bytes
+    low = kill & 0xff;
+    high = (kill >> 8) & 0xff;
+    //package
+    package[0] = low;
+    package[1] = high;
+    //write
+    Wire.write(package, 2);
   }
   else if(reg == 8){
-    sender = "D:" + String(depth_in) + ";";
-    Wire.write(sender.c_str());
+    int16_t depth = (int16_t)(depth_in * 1000);
+    //split the killswitch into low/high bytes
+    low = depth & 0xff;
+    high = (depth >> 8) & 0xff;
+    //package
+    package[0] = low;
+    package[1] = high;
+    //write
+    Wire.write(package, 2);
   }
 
     
