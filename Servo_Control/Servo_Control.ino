@@ -11,18 +11,13 @@ double depth_in = 0.00;
 double depth_last = depth_in;
 int reference[3];
 int counter = 0;
-Power power(1);//Killswitch is Digital Pin 2
+Power power(1);//Killswitch is Digital Pin 1
 MS5837 depth_Sensor;
 String sender = "";
 int reg = 0;
 int led = 13;
 
-void setup() {
-
-  Serial1.end();
-  Serial2.end();
-  Serial3.end();
-  
+void setup() {  
 
   //set up i2c slave on teensy pins 18 and 19 
   Wire.begin(I2C_SLAVE, 0x04, I2C_PINS_18_19, I2C_PULLUP_EXT, I2C_RATE_100); //set up the teensy as a slave
@@ -64,7 +59,6 @@ void loop(){
     counter++;
     if(counter == 100){
       setup();
-
     }
     
    }
