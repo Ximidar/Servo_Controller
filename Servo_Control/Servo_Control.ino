@@ -15,6 +15,11 @@ String sender = "";
 int reg = 0;
 int led = 13;
 
+//variables for restarting the teensy
+#define RESTART_ADDR       0xE000ED0C
+#define READ_RESTART()     (*(volatile uint32_t *)RESTART_ADDR)
+#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
+
 void setup() {
 
   Serial1.end();
@@ -50,9 +55,9 @@ void loop(){
 
    depth_Sensor.read();
    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
-//   if(depth_in > 1000.00){
-//    depth_in = 0.00;
-//   }
+   if(depth_in > 100.00){
+    depth_in = 0.00;
+   }
 
   if(!power.return_killswitch()){
 
@@ -75,7 +80,7 @@ void loop(){
 // read ROS is used to write to the registers that are in the switch statement.
 void readROS(size_t byteC){
   int count = 0;
-  for(int i = 0; i < 4 ; i++){
+  for(int i = 0; i < 2 ; i++){
      reference[i] = 0;
   }
 
@@ -136,7 +141,27 @@ void readROS(size_t byteC){
         else if(  (reference[1] | (reference[2]<<8) ) == 1 ){
           power.set_killswitch(POWER_ON);
         }        
-      break;      
+      break;    
+
+      //restart the teensy
+      case 15:
+        if(  (reference[1] | (reference[2]<<8) ) == 1 ){
+            // 0000101111110100000000000000100
+            // Assert [2]SYSRESETREQ
+            WRITE_RESTART(0x5FA0004);
+        }  
+        break;
+
+      //reinitialize the depth sensor
+      case 16:
+        if(  (reference[1] | (reference[2]<<8) ) == 1 ){
+            //initialize depth sensor
+            depth_Sensor.init();
+            depth_Sensor.setFluidDensity(997); 
+             
+        }  
+        break;  
+
 
       ////////////////////////////Read Requests///////////////////////////  
     
