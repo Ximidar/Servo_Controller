@@ -4,21 +4,18 @@
 #include "power.h"
 #include "Servo_Scarborough.h"
                         //_m0, _m1, _m2, _m3, _m4,  _m5
-Servo_Scarborough servos( 8    ,4,  5,   6,   7,   3);
+Servo_Scarborough servos( 7    ,3,  4,   5,   6,   2);
 //we may want to change pins 5, 7, and 8 as they lie on the RX TX lines
 //At least pin 5 as it lies on the RX1 line which may be being used at startup.
 double depth_in = 0.00;
+double depth_last = depth_in;
 int reference[3];
-Power power(2);//Killswitch is Digital Pin 2
+int counter = 0;
+Power power(1);//Killswitch is Digital Pin 2
 MS5837 depth_Sensor;
 String sender = "";
 int reg = 0;
 int led = 13;
-
-//variables for restarting the teensy
-#define RESTART_ADDR       0xE000ED0C
-#define READ_RESTART()     (*(volatile uint32_t *)RESTART_ADDR)
-#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
 
 void setup() {
 
@@ -46,6 +43,10 @@ void setup() {
   //set up led
   pinMode(led, OUTPUT);
   digitalWrite(led, HIGH);
+  delay(200);
+  digitalWrite(led, LOW);
+  delay(200);
+  digitalWrite(led, HIGH);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -55,8 +56,17 @@ void loop(){
 
    depth_Sensor.read();
    depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
+   depth_last = depth_in;
    if(depth_in > 100.00){
     depth_in = 0.00;
+   }
+   if(depth_in == depth_last){
+    counter++;
+    if(counter == 100){
+      setup();
+
+    }
+    
    }
 
   if(!power.return_killswitch()){
@@ -146,9 +156,8 @@ void readROS(size_t byteC){
       //restart the teensy
       case 15:
         if(  (reference[1] | (reference[2]<<8) ) == 1 ){
-            // 0000101111110100000000000000100
-            // Assert [2]SYSRESETREQ
-            WRITE_RESTART(0x5FA0004);
+            
+            setup();
         }  
         break;
 
@@ -156,8 +165,7 @@ void readROS(size_t byteC){
       case 16:
         if(  (reference[1] | (reference[2]<<8) ) == 1 ){
             //initialize depth sensor
-            depth_Sensor.init();
-            depth_Sensor.setFluidDensity(997); 
+            setup();
              
         }  
         break;  
