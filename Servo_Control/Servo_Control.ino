@@ -47,22 +47,14 @@ void setup() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////Main Loop////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void loop(){
 
-   depth_Sensor.read();
-   depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
-   depth_last = depth_in;
-   if(depth_in > 100.00){
-    depth_in = 0.00;
-   }
-   if(depth_in == depth_last){
-    counter++;
-    if(counter == 100){
-      setup();
-    }
-    
-   }
+void read_depth_sensor(){
+  depth_Sensor.read();
+  depth_in = depth_Sensor.depth() * (3.28084 / 1);//convert meters to feet
 
+}
+
+void monitor_power(){
   if(!power.return_killswitch()){
 
    
@@ -78,7 +70,6 @@ void loop(){
    
   }
 
-    
 }
 
 // read ROS is used to write to the registers that are in the switch statement.
@@ -147,33 +138,17 @@ void readROS(size_t byteC){
         }        
       break;    
 
-      //restart the teensy
-      case 15:
-        if(  (reference[1] | (reference[2]<<8) ) == 1 ){
-            
-            setup();
-        }  
-        break;
-
-      //reinitialize the depth sensor
-      case 16:
-        if(  (reference[1] | (reference[2]<<8) ) == 1 ){
-            //initialize depth sensor
-            setup();
-             
-        }  
-        break;  
-
-
       ////////////////////////////Read Requests///////////////////////////  
     
       //read power state
       case 57:
         reg = 7;
+        monitor_power();
         break;
       //read current depth
       case 58:
         reg = 8;
+        read_depth_sensor();
         break;
 
 
