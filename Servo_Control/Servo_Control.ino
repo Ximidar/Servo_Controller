@@ -42,11 +42,17 @@ void setup() {
   digitalWrite(led, LOW);
   delay(200);
   digitalWrite(led, HIGH);
+
+  //Serial.begin(115200);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////Main Loop////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void loop(){
+  monitor_power();
+}
 
 void read_depth_sensor(){
   depth_Sensor.read();
@@ -55,18 +61,20 @@ void read_depth_sensor(){
 }
 
 void monitor_power(){
-  if(!power.return_killswitch()){
+  if(power.return_killswitch()){
 
    
     servos.okay_to_operate();
     //monitor the killSwtich
     power.monitor_killswitch();
+    digitalWrite(led, HIGH);
     
   }
   else{
     servos.stop_motors();
     //monitor the killSwtich
     power.monitor_killswitch();
+    digitalWrite(led, LOW);
    
   }
 
@@ -97,53 +105,44 @@ void readROS(size_t byteC){
       ///////////////////////////////////motor Writes/////////////////////////////////
       //first number for yaw
       //low | (high<<8)
-      case 0:       
-        servos.set_speed(0, reference[1] | (reference[2]<<8) );
+      case 10:       
+        servos.set_speed(0, reference[2] | (reference[1]<<8) );
+        //Serial.println(reference[1]);
+        //Serial.println(reference[2]);
+        //Serial.println(reference[2] | (reference[1]<<8));
         break;
         
      //second number for yaw
-      case 1:        
-        servos.set_speed(1, reference[1] | (reference[2]<<8) );        
+      case 11:        
+        servos.set_speed(1, reference[2] | (reference[1]<<8) );        
         break;
         
       //first number for pitch
-      case 2:        
-        servos.set_speed(2, reference[1] | (reference[2]<<8) );        
+      case 12:        
+        servos.set_speed(2, reference[2] | (reference[1]<<8) );        
         break;
         
       //second number for pitch
-      case 3:        
-        servos.set_speed(3, reference[1] | (reference[2]<<8) );        
+      case 13:        
+        servos.set_speed(3, reference[2] | (reference[1]<<8) );        
         break;
         
       //first number for roll
-      case 4:        
-        servos.set_speed(4, reference[1] | (reference[2]<<8) );        
+      case 14:        
+        servos.set_speed(4, reference[2] | (reference[1]<<8) );        
         break;
         
       //second number for roll
-      case 5:        
-       servos.set_speed(5, reference[1] | (reference[2]<<8) );        
+      case 15:        
+       servos.set_speed(5, reference[2] | (reference[1]<<8) );        
         break;
-
-      /////////////////////////////////POWER WRITES/////////////////////////////////
-      //enable or disable power
-      case 14:
-        //if the reference == 0 disable power
-        if(  (reference[1] | (reference[2]<<8) ) == 0 ){
-          power.set_killswitch(POWER_OFF);
-        }//otherwise if reference = 1 enable power
-        else if(  (reference[1] | (reference[2]<<8) ) == 1 ){
-          power.set_killswitch(POWER_ON);
-        }        
-      break;    
 
       ////////////////////////////Read Requests///////////////////////////  
     
       //read power state
       case 57:
         reg = 7;
-        monitor_power();
+        //monitor_power();
         break;
       //read current depth
       case 58:

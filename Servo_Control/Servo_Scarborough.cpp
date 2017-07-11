@@ -66,7 +66,7 @@ void Servo_Scarborough::set_speed(int _motor, int signal){
 	if(!killed){
 		switch(_motor){
 			case 0:
-                motors[0] = signal;
+           motors[0] = signal;
 			break;
 
 			case 1:
